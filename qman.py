@@ -1,8 +1,28 @@
 from random import randrange
 from datetime import datetime, timedelta
 
-# fake date object; eventually will be changed by datetime.now()
-date = datetime(2019, 12, 19, 8, 0, 0)
+
+class FakeDatetime:
+    def __init__(self):
+        self.now = datetime(2019, 12, 19, 8, 0, 0)
+
+    def add_minutes(self, minutes=10):
+        """
+        helper function; advance fake datetime object for a certain
+        amount of minutes (10 minutes by default)
+        """
+        self.now += timedelta(minutes = minutes)
+
+    def show_date(self):
+        """
+        returns string representation of datetime object
+        """
+        return self.now.strftime('%c')
+
+
+# fake datetime object; eventually will be changed by datetime.now()
+f_date = FakeDatetime()
+
 
 # fake data about planned patients visits(will be changed by database query)
 fake_data = {
@@ -28,46 +48,26 @@ fake_data = {
 }
 
 
-def show_date():
-    """
-    returns string representation of fake / real datetime object
-    """
-    global date
-    return date.strftime('%c')
-
-
-def advance_date(minutes=10):
-    """
-    helper function; advance fake datetime object for a certain
-    amount of minutes (10 minutes by default)
-    """
-    global date
-    date += timedelta(minutes=minutes)
-
-
 def show_queue(num=None):
     """
     returns string representation of queue,
     optional argument (n) can be used to result slice: 1-st, 2-nd, ..., n-th
     """
-    # TODO data validation - IndexError, when num > len(fake_data['q'])
     return fake_data['q'][:num]
 
 
-def check_is_absance(p_indx):
+def check_is_absance(p):
     """
     returns True when specified patient visit time has passed
     """
-    # TODO data validation
-    global date
 
-    if fake_data[p_indx]['end'] < date:
+    if fake_data[p]['end'] < f_date.now:
         return True
     else:
         return False
 
 
-def log_absance(p_indx):
+def log_absance(p):
     """
     for the queue example: [p1, p2, p3, p4, ...]
     p1 patient's absence occurs when a p2 patient goes to the doctor's office
@@ -77,30 +77,30 @@ def log_absance(p_indx):
     the third causes removal from the queue
     """
     # TODO data validation, list of absences(dates) instead of absences number
-    fake_data[p_indx]['absences'] += 1
-    c_pos = fake_data['q'].index(p_indx)
+    fake_data[p]['absences'] += 1
+    c_pos = fake_data['q'].index(p)
 
-    if fake_data[p_indx]['absences'] == 1:
+    if fake_data[p]['absences'] == 1:
         try:
-            fake_data['q'].remove(p_indx)
-            fake_data['q'].insert(c_pos + 2, p_indx)
+            fake_data['q'].remove(p)
+            fake_data['q'].insert(c_pos + 2, p)
         except IndexError:
             fake_data['q'].append(
-                fake_data['q'].pop(fake_data['q'][p_indx]))
+                fake_data['q'].pop(fake_data['q'][p]))
 
-    if fake_data[p_indx]['absences'] == 2:
+    if fake_data[p]['absences'] == 2:
         try:
-            fake_data['q'].remove(p_indx)
-            fake_data['q'].insert(c_pos + 6, p_indx)
+            fake_data['q'].remove(p)
+            fake_data['q'].insert(c_pos + 6, p)
         except IndexError:
             fake_data['q'].append(
-                fake_data['q'].pop(fake_data['q'][p_indx]))
+                fake_data['q'].pop(fake_data['q'][p]))
 
-    if fake_data[p_indx]['absences'] >= 3:
-        fake_data['q'].remove(p_indx)
+    if fake_data[p]['absences'] >= 3:
+        fake_data['q'].remove(p)
 
 
-def visit(p_indx):
+def visit(p):
     """
     removes from queue patient when doctor's office visit is done
 
@@ -109,17 +109,12 @@ def visit(p_indx):
     """
     # TODO input validation
 
-    c_pos = fake_data['q'].index(p_indx)
-    for p in fake_data['q'][:c_pos]:
-        if check_is_absance(p):
-            log_absance(p)
+    c_pos = fake_data['q'].index(p)
+    for patient in fake_data['q'][:c_pos]:
+        if check_is_absance(patient):
+            log_absance(patient)
 
     # simulating time passing
-    global date
-    advance_date(randrange(5, 25))
+    f_date.add_minutes(randrange(5, 25))
 
-    fake_data['q'].remove(p_indx)
-
-
-
-
+    fake_data['q'].remove(p)
