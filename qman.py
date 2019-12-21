@@ -1,5 +1,5 @@
-from random import randrange
 from datetime import datetime, timedelta
+from random import randrange
 
 
 class FakeDatetime:
@@ -20,13 +20,14 @@ class FakeDatetime:
         return self.now.strftime('%c')
 
 
-# fake datetime object; eventually will be changed by datetime.now()
-f_date = FakeDatetime()
+class DayVisitPlan:
+    def __init__(self, d):
+        self.visits = d
+        self.queue = [p for p in d.keys()]
 
 
 # fake data about planned patients visits(will be changed by database query)
 fake_data = {
-    'q': [1, 2, 3, 4, 5, 6, 7, 8, 9],
     1: {'name': 'pat1', 'start': datetime(2019, 12, 19, 8, 0, 0),
         'end': datetime(2019, 12, 19, 8, 10, 0), 'absences': 0},
     2: {'name': 'pat2', 'start': datetime(2019, 12, 19, 8, 10, 0),
@@ -47,13 +48,18 @@ fake_data = {
         'end': datetime(2019, 12, 19, 10, 20, 0), 'absences': 0},
 }
 
+# fake datetime object; eventually will be changed by datetime.now()
+fake_date = FakeDatetime()
+
+fake_day_plan = DayVisitPlan(fake_data)
+
 
 def show_queue(num=None):
     """
     returns string representation of queue,
     optional argument (n) can be used to result slice: 1-st, 2-nd, ..., n-th
     """
-    return fake_data['q'][:num]
+    return fake_day_plan.queue[:num]
 
 
 def check_is_absance(p):
@@ -61,7 +67,7 @@ def check_is_absance(p):
     returns True when specified patient visit time has passed
     """
 
-    if fake_data[p]['end'] < f_date.now:
+    if fake_day_plan.visits[p]['end'] < fake_date.now:
         return True
     else:
         return False
@@ -77,27 +83,27 @@ def log_absance(p):
     the third causes removal from the queue
     """
     # TODO data validation, list of absences(dates) instead of absences number
-    fake_data[p]['absences'] += 1
-    c_pos = fake_data['q'].index(p)
+    fake_day_plan.visits[p]['absences'] += 1
+    c_pos = fake_day_plan.queue.index(p)
 
-    if fake_data[p]['absences'] == 1:
+    if fake_day_plan.visits[p]['absences'] == 1:
         try:
-            fake_data['q'].remove(p)
-            fake_data['q'].insert(c_pos + 2, p)
+            fake_day_plan.queue.remove(p)
+            fake_day_plan.queue.insert(c_pos + 2, p)
         except IndexError:
-            fake_data['q'].append(
-                fake_data['q'].pop(fake_data['q'][p]))
+            fake_day_plan.queue.append(
+                fake_day_plan.queue.pop(fake_day_plan.queue[p]))
 
-    if fake_data[p]['absences'] == 2:
+    if fake_day_plan.visits[p]['absences'] == 2:
         try:
-            fake_data['q'].remove(p)
-            fake_data['q'].insert(c_pos + 6, p)
+            fake_day_plan.queue.remove(p)
+            fake_day_plan.queue.insert(c_pos + 6, p)
         except IndexError:
-            fake_data['q'].append(
-                fake_data['q'].pop(fake_data['q'][p]))
+            fake_day_plan.queue.append(
+                fake_day_plan.queue.pop(fake_day_plan.queue[p]))
 
-    if fake_data[p]['absences'] >= 3:
-        fake_data['q'].remove(p)
+    if fake_day_plan.visits[p]['absences'] >= 3:
+        fake_day_plan.queue.remove(p)
 
 
 def visit(p):
@@ -109,12 +115,12 @@ def visit(p):
     """
     # TODO input validation
 
-    c_pos = fake_data['q'].index(p)
-    for patient in fake_data['q'][:c_pos]:
+    c_pos = fake_day_plan.queue.index(p)
+    for patient in fake_day_plan.queue[:c_pos]:
         if check_is_absance(patient):
             log_absance(patient)
 
     # simulating time passing
-    f_date.add_minutes(randrange(5, 25))
+    fake_date.add_minutes(randrange(5, 25))
 
-    fake_data['q'].remove(p)
+    fake_day_plan.queue.remove(p)
