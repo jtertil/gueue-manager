@@ -50,20 +50,25 @@ class DayVisitPlan:
         the first and second absence results in the loss of position
         in the queue, the third causes removal from the queue
         """
-        # TODO data validation, list of absences(dates) instead of absences number
-        self.visits[p]['absences'] += 1
+        # TODO data validation
+        self.visits[p]['absences'].append(date.now)
         c_pos = self.queue.index(p)
 
-        if self.visits[p]['absences'] == 1:
+        if len(self.visits[p]['absences']) == 1:
             self.queue.remove(p)
             self.queue.insert(c_pos + 2, p)
 
-        if self.visits[p]['absences'] == 2:
+        if len(self.visits[p]['absences']) == 2:
             self.queue.remove(p)
             self.queue.insert(c_pos + 4, p)
 
-        if self.visits[p]['absences'] >= 3:
+        if len(self.visits[p]['absences']) >= 3:
             self.queue.remove(p)
+
+    def show_absences(self, p):
+        """returns string representation of absences list"""
+        return ', '.join(
+            [a.strftime('%H:%M') for a in self.visits[p]['absences']])
 
     def visit(self, p):
         """
@@ -88,23 +93,23 @@ class DayVisitPlan:
 # fake data about planned patients visits(will be changed by database query)
 fake_data = {
     1: {'name': 'pat1', 'start': datetime(2019, 12, 19, 8, 0, 0),
-        'end': datetime(2019, 12, 19, 8, 10, 0), 'absences': 0},
+        'end': datetime(2019, 12, 19, 8, 10, 0), 'absences': []},
     2: {'name': 'pat2', 'start': datetime(2019, 12, 19, 8, 10, 0),
-        'end': datetime(2019, 12, 19, 8, 20, 0), 'absences': 0},
+        'end': datetime(2019, 12, 19, 8, 20, 0), 'absences': []},
     3: {'name': 'pat3', 'start': datetime(2019, 12, 19, 8, 20, 0),
-        'end': datetime(2019, 12, 19, 8, 40, 0), 'absences': 0},
+        'end': datetime(2019, 12, 19, 8, 40, 0), 'absences': []},
     4: {'name': 'pat4', 'start': datetime(2019, 12, 19, 8, 40, 0),
-        'end': datetime(2019, 12, 19, 8, 50, 0), 'absences': 0},
+        'end': datetime(2019, 12, 19, 8, 50, 0), 'absences': []},
     5: {'name': 'pat5', 'start': datetime(2019, 12, 19, 8, 50, 0),
-        'end': datetime(2019, 12, 19, 9, 20, 0), 'absences': 0},
+        'end': datetime(2019, 12, 19, 9, 20, 0), 'absences': []},
     6: {'name': 'pat6', 'start': datetime(2019, 12, 19, 9, 20, 0),
-        'end': datetime(2019, 12, 19, 9, 30, 0), 'absences': 0},
+        'end': datetime(2019, 12, 19, 9, 30, 0), 'absences': []},
     7: {'name': 'pat7', 'start': datetime(2019, 12, 19, 9, 30, 0),
-        'end': datetime(2019, 12, 19, 9, 50, 0), 'absences': 0},
+        'end': datetime(2019, 12, 19, 9, 50, 0), 'absences': []},
     8: {'name': 'pat8', 'start': datetime(2019, 12, 19, 9, 50, 0),
-        'end': datetime(2019, 12, 19, 10, 0, 0), 'absences': 0},
+        'end': datetime(2019, 12, 19, 10, 0, 0), 'absences': []},
     9: {'name': 'pat9', 'start': datetime(2019, 12, 19, 10, 0, 0),
-        'end': datetime(2019, 12, 19, 10, 20, 0), 'absences': 0},
+        'end': datetime(2019, 12, 19, 10, 20, 0), 'absences': []},
 }
 # fake datetime object; eventually will be changed by datetime.now()
 date = FakeDatetime()

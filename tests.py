@@ -80,14 +80,14 @@ class AbsenceLog(unittest.TestCase):
 
     def tearDown(self) -> None:
         for patient in self.t_p_obj.visits:
-            self.t_p_obj.visits[patient]['absences'] = 0
+            self.t_p_obj.visits[patient]['absences'] = []
 
         self.t_p_obj.queue.sort()
 
     def test_all_patients_zero_absences_at_start(self):
         res = True
         for patient in self.t_p_obj.visits:
-            if self.t_p_obj.visits[patient]['absences'] != 0:
+            if self.t_p_obj.visits[patient]['absences']:
                 res = False
         self.assertTrue(res)
 
@@ -98,20 +98,37 @@ class AbsenceLog(unittest.TestCase):
         self.assertEqual(a_position, b_position + 2)
 
     def test_patient_with_two_absences_lost_position(self):
-        self.t_p_obj.visits[1]['absences'] = 1
+        self.t_p_obj.visits[1]['absences'] = [datetime(2019, 12, 19, 8, 10)]
         b_position = self.t_p_obj.queue.index(1)
         self.t_p_obj.log_absence(1)
         a_position = self.t_p_obj.queue.index(1)
         self.assertEqual(a_position, b_position + 4)
 
     def test_patient_with_three_absences_removed(self):
-        self.t_p_obj.visits[1]['absences'] = 2
+        self.t_p_obj.visits[1]['absences'] = [datetime(2019, 12, 19, 8, 10),
+                                              datetime(2019, 12, 19, 8, 50)]
         self.t_p_obj.log_absence(1)
         self.assertFalse(1 in self.t_p_obj.queue)
 
     def test_move_patient_to_last_position(self):
         self.t_p_obj.log_absence(8)
         self.assertTrue(8 in self.t_p_obj.queue[-1:])
+
+
+class ShowAbsences(unittest.TestCase):
+    def setUp(self) -> None:
+        self.t_p_obj = DayVisitPlan(fake_data)
+
+    def test_empty_str_when_no_absences(self):
+        self.assertEqual('', self.t_p_obj.show_absences(1))
+
+    def test_valid_output(self):
+        self.t_p_obj.visits[1]['absences'] = [
+            datetime(2019, 12, 19, 8, 10),
+            datetime(2019, 12, 19, 8, 30),
+            datetime(2019, 12, 19, 10, 40)
+        ]
+        self.assertEqual('08:10, 08:30, 10:40', self.t_p_obj.show_absences(1))
 
 
 class Visit(unittest.TestCase):
