@@ -25,6 +25,65 @@ class DayVisitPlan:
         self.visits = d
         self.queue = [p for p in d.keys()]
 
+    def show_queue(self, num=None):
+        """
+        returns list representation of queue,
+        optional argument (n) can be used to result slice: 1-st, 2-nd, .., n-th
+        """
+        return self.queue[:num]
+
+    def check_is_absence(self, p):
+        """
+        returns True when specified patient visit time has passed
+        """
+        if self.visits[p]['end'] < date.now:
+            return True
+        else:
+            return False
+
+    def log_absence(self, p):
+        """
+        for the queue example: [p1, p2, p3, p4, ...]
+        p1 patient's absence occurs when a p2 patient goes to the
+        doctor's office and the time of p1 patient visit has passed
+
+        the first and second absence results in the loss of position
+        in the queue, the third causes removal from the queue
+        """
+        # TODO data validation, list of absences(dates) instead of absences number
+        self.visits[p]['absences'] += 1
+        c_pos = self.queue.index(p)
+
+        if self.visits[p]['absences'] == 1:
+            self.queue.remove(p)
+            self.queue.insert(c_pos + 2, p)
+
+        if self.visits[p]['absences'] == 2:
+            self.queue.remove(p)
+            self.queue.insert(c_pos + 4, p)
+
+        if self.visits[p]['absences'] >= 3:
+            self.queue.remove(p)
+
+    def visit(self, p):
+        """
+        removes from queue patient when doctor's office visit is done
+
+        check for absence occurs
+        when there are patients in queue before current patient
+        """
+        # TODO input validation
+
+        c_pos = self.queue.index(p)
+        for patient in self.queue[:c_pos]:
+            if self.check_is_absence(patient):
+                self.log_absence(patient)
+
+        # time passing simulation
+        date.add_minutes(randrange(5, 25))
+
+        self.queue.remove(p)
+
 
 # fake data about planned patients visits(will be changed by database query)
 fake_data = {
@@ -47,80 +106,9 @@ fake_data = {
     9: {'name': 'pat9', 'start': datetime(2019, 12, 19, 10, 0, 0),
         'end': datetime(2019, 12, 19, 10, 20, 0), 'absences': 0},
 }
-
 # fake datetime object; eventually will be changed by datetime.now()
-fake_date = FakeDatetime()
-
-fake_day_plan = DayVisitPlan(fake_data)
-
-
-def show_queue(num=None):
-    """
-    returns string representation of queue,
-    optional argument (n) can be used to result slice: 1-st, 2-nd, ..., n-th
-    """
-    return fake_day_plan.queue[:num]
+date = FakeDatetime()
+day_plan = DayVisitPlan(fake_data)
 
 
-def check_is_absance(p):
-    """
-    returns True when specified patient visit time has passed
-    """
 
-    if fake_day_plan.visits[p]['end'] < fake_date.now:
-        return True
-    else:
-        return False
-
-
-def log_absance(p):
-    """
-    for the queue example: [p1, p2, p3, p4, ...]
-    p1 patient's absence occurs when a p2 patient goes to the doctor's office
-    and the time of p1 patient visit has passed
-
-    the first and second absence results in the loss of position in the queue,
-    the third causes removal from the queue
-    """
-    # TODO data validation, list of absences(dates) instead of absences number
-    fake_day_plan.visits[p]['absences'] += 1
-    c_pos = fake_day_plan.queue.index(p)
-
-    if fake_day_plan.visits[p]['absences'] == 1:
-        try:
-            fake_day_plan.queue.remove(p)
-            fake_day_plan.queue.insert(c_pos + 2, p)
-        except IndexError:
-            fake_day_plan.queue.append(
-                fake_day_plan.queue.pop(fake_day_plan.queue[p]))
-
-    if fake_day_plan.visits[p]['absences'] == 2:
-        try:
-            fake_day_plan.queue.remove(p)
-            fake_day_plan.queue.insert(c_pos + 6, p)
-        except IndexError:
-            fake_day_plan.queue.append(
-                fake_day_plan.queue.pop(fake_day_plan.queue[p]))
-
-    if fake_day_plan.visits[p]['absences'] >= 3:
-        fake_day_plan.queue.remove(p)
-
-
-def visit(p):
-    """
-    removes from queue patient when doctor's office visit is done
-
-    check for absence occurs
-    when there are patients in queue before current patient
-    """
-    # TODO input validation
-
-    c_pos = fake_day_plan.queue.index(p)
-    for patient in fake_day_plan.queue[:c_pos]:
-        if check_is_absance(patient):
-            log_absance(patient)
-
-    # simulating time passing
-    fake_date.add_minutes(randrange(5, 25))
-
-    fake_day_plan.queue.remove(p)
